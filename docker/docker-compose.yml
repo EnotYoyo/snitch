@@ -1,0 +1,35 @@
+version: "3"
+services:
+  web:
+    user: "${CUSTOM_UID:-0}:${CUSTOM_GID:-0}"
+    hostname: "${COMPOSE_PROJECT_NAME:-snitch}-web"
+    image: "snitch-web"
+    build:
+      context: "."
+    command: "/bin/bash -c /srv/snitch/src/docker/startup.sh"
+    restart: "always"
+    ports:
+      - "0.0.0.0:${HOST_WEB_PORT:-5000}:5000"
+    env_file:
+      - .env
+      - db.env
+      - web.env
+    depends_on:
+      - postgres
+    links:
+      - postgres:db
+    volumes:
+      - ../:/srv/snitch/src
+  postgres:
+    hostname: "${COMPOSE_PROJECT_NAME:-snitch}-postgres"
+    image: "postgres:10.3-alpine"
+    restart: "always"
+    ports:
+      - "0.0.0.0:${HOST_PG_PORT:-5432}:5432"
+    env_file:
+      - db.env
+    volumes:
+      - postgres_data:/var/lib/postgres/data
+volumes:
+  postgres_data:
+    driver: local
