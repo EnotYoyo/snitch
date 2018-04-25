@@ -1,18 +1,5 @@
-import datetime
-
-import pytest
-import sqlalchemy
-from snitch import db
 from snitch.models import Root
-
-
-@pytest.yield_fixture
-def empty_database():
-    db.create_all()
-    db.session.commit()
-    yield db
-    db.session.remove()
-    db.drop_all()
+from .utils import empty_database
 
 
 def test_connect(empty_database):
