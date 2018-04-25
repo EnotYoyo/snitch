@@ -1,0 +1,78 @@
+import pytest
+import sqlalchemy
+from snitch import db
+from snitch.models import Product, Review
+
+
+@pytest.yield_fixture
+def empty_database():
+    db.create_all()
+    yield db
+    db.session.remove()
+    db.drop_all()
+
+
+def test_connect(empty_database):
+    product = Product.query.all()
+    assert len(product) == 0
+
+
+def test_create(empty_database):
+    product = Product(name="Test product", description="description")
+    empty_database.session.add(product)
+    empty_database.session.commit()
+    assert product.id == 1
+    assert product.name == "Test product"
+    assert product.description == "description"
+
+
+def test_russian_create(empty_database):
+    product = Product(name="Тестовый product", description="description описание")
+    empty_database.session.add(product)
+    empty_database.session.commit()
+    assert product.id == 1
+    assert product.name == "Тестовый product"
+    assert product.description == "description описание"
+
+
+def test_unique_name(empty_database):
+    product1 = Product(name="Test product", description="description")
+    product2 = Product(name="Test product", description="description")
+    empty_database.session.add(product1)
+    empty_database.session.add(product2)
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        empty_database.session.commit()
+
+
+def test_nullable_name(empty_database):
+    product = Product()
+    empty_database.session.add(product)
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        empty_database.session.commit()
+
+
+def test_autoincrement(empty_database):
+    product1 = Product(name="Test product1", description="description")
+    product2 = Product(name="Test product2", description="description")
+    product3 = Product(name="Test product3", description="description")
+    empty_database.session.add_all([product1, product2, product3])
+    empty_database.session.commit()
+    assert product1.id == 1
+    assert product2.id == 2
+    assert product3.id == 3
+
+
+def test_reviews(empty_database):
+    product1 = Product(name="Test product1", description="description")
+    review1 = Review(product_id=1, review="Review 1!")
+    review2 = Review(product_id=1, review="Review 2!")
+    empty_database.session.add_all([product1, review1, review2])
+    empty_database.session.commit()
+    reviews = product1.reviews
+    assert reviews[0].id == 1
+    assert reviews[0].review == "Review 1!"
+    assert reviews[1].id == 2
+    assert reviews[1].review == "Review 2!"
+
+
+

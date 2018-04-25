@@ -25,4 +25,5 @@ cd /srv/snitch/src
 /srv/snitch/.env/bin/pip install -r requirements.txt
 /srv/snitch/.env/bin/python setup.py install
 export FLASK_APP=snitch.py
+/srv/snitch/.env/bin/python -m flask db upgrade
 /srv/snitch/.env/bin/python -m flask run --host=0.0.0.0
