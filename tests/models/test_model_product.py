@@ -68,4 +68,8 @@ def test_reviews(empty_database):
     assert reviews[1].review == "Review 2!"
 
 
-
+def test_serialise(empty_database):
+    product = Product(name="Test product", description="description")
+    empty_database.session.add(product)
+    empty_database.session.commit()
+    assert product.serialize == {"id": 1, "name": "Test product", "description": "description"}
