@@ -4,13 +4,7 @@ import json
 import pytest
 
 import snitch
-from tests.utils import empty_database, send_json
-
-
-@pytest.yield_fixture
-def app():
-    _app = snitch.app.test_client()
-    yield _app
+from tests.utils import empty_database, send_json, app
 
 
 def test_product_empty_list(empty_database, app):

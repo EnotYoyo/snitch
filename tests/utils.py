@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+import snitch
 from snitch import db
 
 
@@ -11,6 +12,12 @@ def empty_database():
     yield db
     db.session.remove()
     db.drop_all()
+
+
+@pytest.yield_fixture
+def app():
+    _app = snitch.app.test_client()
+    yield _app
 
 
 def send_json(app, method, endpoint, data=''):

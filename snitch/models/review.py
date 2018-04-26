@@ -12,3 +12,11 @@ class Review(db.Model):
 
     def __repr__(self):
         return '<Review %r>' % self.id
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'review': self.review,
+            'created_time': int(self.created_time.timestamp())
+        }
