@@ -9,3 +9,11 @@ class Product(db.Model):
 
     def __repr__(self):
         return '<Product %r>' % self.name
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description
+        }

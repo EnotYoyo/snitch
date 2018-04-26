@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from snitch import db
@@ -9,3 +11,7 @@ def empty_database():
     yield db
     db.session.remove()
     db.drop_all()
+
+
+def send_json(app, method, endpoint, data=''):
+    return getattr(app, method)(endpoint, data=json.dumps(data), content_type='application/json')

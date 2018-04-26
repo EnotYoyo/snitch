@@ -2,7 +2,7 @@ import pytest
 import sqlalchemy
 from snitch.models import Product, Review
 
-from .utils import empty_database
+from tests.utils import empty_database
 
 
 def test_connect(empty_database):
