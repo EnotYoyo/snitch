@@ -1,4 +1,5 @@
 import base64
+import binascii
 
 from flask import jsonify, current_app
 from sqlalchemy import or_
@@ -28,9 +29,14 @@ class Users(Resource):
 
         # create new object
         user = models.User(login=args["login"], vk_id=args["vk_id"], hash=args["hash"])
+        tree = snark.MerkleTree(current_app.config["TREE"], current_app.config["TREE_INDEX"])
+
+        try:
+            tree.add(base64.b64decode(args["hash"].encode('utf-8')))
+        except binascii.Error:
+            abort(400)
+
         db.session.add(user)
         db.session.commit()
 
-        tree = snark.MerkleTree(current_app.config["TREE"], current_app.config["TREE_INDEX"])
-        tree.add(base64.b64encode(args["hash"].encode('utf-8')))
         return jsonify(user.serialize, 201)
