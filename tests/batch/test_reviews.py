@@ -1,6 +1,5 @@
 import datetime
 import functools
-import json
 from unittest import mock
 
 import pytest

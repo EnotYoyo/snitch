@@ -1,9 +1,4 @@
 import functools
-import json
-
-import pytest
-
-import snitch
 from tests.utils import empty_database, send_json, app
 
 

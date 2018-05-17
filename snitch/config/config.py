@@ -11,3 +11,9 @@ if 'SNITCH_DB_URI' not in os.environ:
 
 SQLALCHEMY_DATABASE_URI = os.environ['SNITCH_DB_URI']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+TREE = os.path.join(ROOT_PATH, "snark", "tree.bin")
+TREE_INDEX = os.path.join(ROOT_PATH, "snark", "tree_index.bin")
+VERIFICATION_KEY = os.path.join(ROOT_PATH, "snark", "vk.key")

@@ -1,5 +1,5 @@
 from flask import jsonify
-from flask_restful import Resource, reqparse, abort
+from flask_restful import Resource, reqparse
 from snitch import models, db
 
 

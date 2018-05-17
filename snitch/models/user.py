@@ -9,3 +9,10 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.login
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'login': self.login
+        }
