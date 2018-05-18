@@ -57,14 +57,14 @@ def test_autoincrement(empty_database):
 
 def test_reviews(empty_database):
     product1 = Product(name="Test product1", description="description")
-    review1 = Review(product_id=1, review="Review 1!")
-    review2 = Review(product_id=1, review="Review 2!")
+    review1 = Review(id=b"1", product_id=1, review="Review 1!")
+    review2 = Review(id=b"2", product_id=1, review="Review 2!")
     empty_database.session.add_all([product1, review1, review2])
     empty_database.session.commit()
     reviews = product1.reviews
-    assert reviews[0].id == 1
+    assert reviews[0].id == b"1"
     assert reviews[0].review == "Review 1!"
-    assert reviews[1].id == 2
+    assert reviews[1].id == b"2"
     assert reviews[1].review == "Review 2!"
 
 

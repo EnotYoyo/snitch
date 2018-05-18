@@ -24,20 +24,20 @@ def test_connect(empty_database):
 
 
 def test_create(empty_database):
-    review = Review(product_id=1, review="Review test_create!")
+    review = Review(id=b"1", product_id=1, review="Review test_create!")
     empty_database.session.add(review)
     empty_database.session.commit()
-    assert review.id == 1
+    assert review.id == b"1"
     assert review.product_id == 1
     assert review.review == "Review test_create!"
     assert isinstance(review.created_time, datetime.datetime)
 
 
 def test_russian_create(empty_database):
-    review = Review(product_id=1, review="Комментарий о продукте from Russia")
+    review = Review(id=b"1", product_id=1, review="Комментарий о продукте from Russia")
     empty_database.session.add(review)
     empty_database.session.commit()
-    assert review.id == 1
+    assert review.id == b"1"
     assert review.product_id == 1
     assert review.review == "Комментарий о продукте from Russia"
     assert isinstance(review.created_time, datetime.datetime)
@@ -55,14 +55,3 @@ def test_nullable_review(empty_database):
     empty_database.session.add(review)
     with pytest.raises(sqlalchemy.exc.IntegrityError):
         empty_database.session.commit()
-
-
-def test_autoincrement(empty_database):
-    review1 = Review(product_id=1, review="Review test_autoincrement1!")
-    review2 = Review(product_id=1, review="Review test_autoincrement2!")
-    review3 = Review(product_id=2, review="Review test_autoincrement3!")
-    empty_database.session.add_all([review1, review2, review3])
-    empty_database.session.commit()
-    assert review1.id == 1
-    assert review2.id == 2
-    assert review3.id == 3

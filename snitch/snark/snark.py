@@ -70,7 +70,7 @@ class Verifier:
     def __init__(self, vk_file_location):
         global _lib
         if _lib is None:
-            _lib = cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'snark.so'))
+            _lib = cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_snark.so'))
 
         self._InitVerifyingModule = _lib.InitVerifyingModule
         self._InitVerifyingModule.argtypes = [POINTER(c_char)]
@@ -112,7 +112,7 @@ class MerkleTree:
     def __init__(self, tree_file_location, index_file_location):
         global _lib
         if _lib is None:
-            _lib = cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'snark.so'))
+            _lib = cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_snark.so'))
 
         self._InitTreeModule = _lib.InitTreeModule
         self._InitTreeModule.argtypes = [POINTER(c_char), POINTER(c_char)]

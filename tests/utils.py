@@ -7,13 +7,17 @@ import pytest
 import snitch
 from snitch import db
 from snitch.config import config
+from snitch.snark import snark
 
 
 @pytest.yield_fixture
 def empty_database():
+    db.drop_all()
     db.create_all()
-    os.remove(config.TREE)
-    os.remove(config.TREE_INDEX)
+    f = open(config.TREE, "w")
+    f.close()
+    f = open(config.TREE_INDEX, "w")
+    f.close()
     yield db
     db.session.remove()
     db.drop_all()
@@ -35,3 +39,11 @@ def bytes_to_base64(b):
 
 def base64_to_bytes(s):
     return base64.b64decode(s.encode('utf-8'))
+
+
+def create_user(app, login, password, vk_id):
+    prover = snark.Prover(config.PROVING_KEY)
+    sk, pk = prover.get_key(login, password)
+    response = send_json(app, "post", "/users", dict(login=login, vk_id=vk_id, hash=bytes_to_base64(pk)))
+    assert response.get_json() == [{"id": 1, "login": login}, 201]
+    return sk, pk

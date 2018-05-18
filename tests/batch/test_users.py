@@ -7,7 +7,7 @@ from tests.utils import empty_database, send_json, app, bytes_to_base64
 
 
 def create_users_keys():
-    prover = snark.Prover('pk.key')
+    prover = snark.Prover(config.PROVING_KEY)
     sk1, pk1 = prover.get_key('user1', 'pass1')
     return sk1, pk1
 

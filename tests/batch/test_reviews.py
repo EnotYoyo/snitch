@@ -1,15 +1,22 @@
 import datetime
 import functools
+import json
+import os
+import random
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 
 import snitch
-from tests.utils import send_json, app
+from snitch.config import config
+from snitch.snark import snark
+from tests.utils import send_json, app, bytes_to_base64, create_user
 
 
 @pytest.yield_fixture
 def empty_database():
+    snitch.db.drop_all()
     snitch.db.create_all()
     p1 = snitch.models.Product(name="test product 1", description="desc 1")
     p2 = snitch.models.Product(name="test product 2", description="desc 2")
@@ -20,19 +27,40 @@ def empty_database():
     snitch.db.drop_all()
 
 
+def create_review(product_id, review, sk, tree_path):
+    review_struct = {
+        'review': review,
+        'nonce': random.randint(0, 100500)
+    }
+
+    review = json.dumps(review_struct)
+    prover = snark.Prover(config.PROVING_KEY)
+    zk_snark, review_id, review_sig, root = prover.create_snark(sk, tree_path, product_id, review)
+    review = {
+        'review': review,
+        'review_id': bytes_to_base64(review_id),
+        'review_sig': bytes_to_base64(review_sig),
+        'product_id': product_id,
+        'snark': bytes_to_base64(zk_snark),
+        'tree_root': bytes_to_base64(root)
+    }
+
+    return review
+
+
 def test_review_empty_list(empty_database, app):
     send = functools.partial(send_json, app, "get", "/reviews")
 
-    response = app.get("/reviews")
+    response = send(dict(product_id=1))
     assert response.get_json() == {"reviews": []}
 
-    response = send(dict(count=100))
+    response = send(dict(product_id=1, count=100))
     assert response.get_json() == {"reviews": []}
 
-    response = send(dict(offset=100))
+    response = send(dict(product_id=2, offset=100))
     assert response.get_json() == {"reviews": []}
 
-    response = send(dict(count=100, offset=100))
+    response = send(dict(product_id=20, count=100, offset=100))
     assert response.get_json() == {"reviews": []}
 
 
@@ -45,45 +73,120 @@ def test_review_create(empty_database, app):
     response = send(dict(product_id=1))
     assert response.get_json() == {"message": {"review": "Missing required parameter in the JSON body"}}
 
+    response = send(dict(product_id=1, review="4 8 15"))
+    assert response.get_json() == {"message": {"review_id": "Missing required parameter in the JSON body"}}
+
+    response = send(dict(product_id=1, review="4 8 15", review_id="1"))
+    assert response.get_json() == {"message": {"review_sig": "Missing required parameter in the JSON body"}}
+
+    response = send(dict(product_id=1, review="4 8 15", review_id="1", review_sig="1"))
+    assert response.get_json() == {"message": {"snark": "Missing required parameter in the JSON body"}}
+
+    response = send(dict(product_id=1, review="4 8 15", review_id="1", review_sig="1", snark="1"))
+    assert response.get_json() == {"message": {"tree_root": "Missing required parameter in the JSON body"}}
+
+    response = send(dict(product_id=1, review="4 8 15", review_id="1", review_sig="1", tree_root="1"))
+    assert response.get_json() == {"message": {"snark": "Missing required parameter in the JSON body"}}
+
+    sk, pk = create_user(app, "login", "pass", 1)
+    tree = snark.MerkleTree(config.TREE, config.TREE_INDEX)
+    review = create_review("1", "4 8 1 16 23 42", sk, tree.get_path(pk))
+
     d = datetime.datetime.utcnow()
     with mock.patch("datetime.datetime") as patched:
         patched.utcnow = mock.Mock(return_value=d)
-        response = send(dict(product_id=1, review="My test review"))
-        assert response.get_json() == [{"id": 1, "review": "My test review", "created_time": int(d.timestamp())}, 201]
+        response = send(review)
+        assert response.get_json() == [
+            {"id": review["review_id"], "review": "4 8 1 16 23 42", "created_time": int(d.timestamp())}, 201]
 
 
-def test_product_list(empty_database, app):
-    d = datetime.datetime.utcnow()
-    with mock.patch("datetime.datetime") as patched:
-        patched.utcnow = mock.Mock(return_value=d)
-        timestamp = int(d.timestamp())
+@patch("snitch.snark.snark.Verifier")
+def test_product_list(verifier, empty_database, app):
+    verifier.return_value.verify_snark = mock.Mock(return_value=(True, "Patched!"))
 
-        send = functools.partial(send_json, app, "post", "/reviews")
-        review = [
-            {"id": 1, "review": "My test review [0]", "created_time": timestamp},
-            {"id": 2, "review": "My test review [1]", "created_time": timestamp},
-            {"id": 3, "review": "My test review [2]", "created_time": timestamp}
-        ]
+    send = functools.partial(send_json, app, "post", "/reviews")
+    review = [
+        {"id": bytes_to_base64(b"8"), "review": "My test review [0]"},
+        {"id": bytes_to_base64(b"4"), "review": "My test review [1]"},
+        {"id": bytes_to_base64(b"42"), "review": "My test review [2]"}
+    ]
 
-        response = send(dict(product_id=1, review=review[0]["review"]))
-        assert response.get_json() == [review[0], 201]
+    review_1 = {
+        'review': """{
+            \"review\": \"My test review [0]\",
+            \"nonce\": 4
+        }""",
+        'review_id': bytes_to_base64(b"8"),
+        'review_sig': bytes_to_base64(b"15"),
+        'product_id': "1",
+        'snark': bytes_to_base64(b"16"),
+        'tree_root': bytes_to_base64(b"23")
+    }
 
-        response = send(dict(product_id=1, review=review[1]["review"]))
-        assert response.get_json() == [review[1], 201]
+    review_2 = {
+        'review': """{
+            \"review\": \"My test review [1]\",
+            \"nonce\": 42
+        }""",
+        'review_id': bytes_to_base64(b"4"),
+        'review_sig': bytes_to_base64(b"8"),
+        'product_id': "1",
+        'snark': bytes_to_base64(b"15"),
+        'tree_root': bytes_to_base64(b"16")
+    }
 
-        response = send(dict(product_id=2, review=review[2]["review"]))
-        assert response.get_json() == [review[2], 201]
+    review_3 = {
+        'review': """{
+            \"review\": \"My test review [2]\",
+            \"nonce\": 23
+        }""",
+        'review_id': bytes_to_base64(b"42"),
+        'review_sig': bytes_to_base64(b"4"),
+        'product_id': "2",
+        'snark': bytes_to_base64(b"8"),
+        'tree_root': bytes_to_base64(b"15")
+    }
 
-        send_get = functools.partial(send_json, app, "get", "/reviews")
+    response = send(review_1)
+    json_data = response.get_json()
+    assert "created_time" in json_data[0]
 
-        response = app.get("/reviews")
-        assert response.get_json() == {"reviews": review}
+    del json_data[0]["created_time"]
+    assert response.get_json() == [review[0], 201]
 
-        response = send_get(dict(count=1))
-        assert response.get_json() == {"reviews": review[:1]}
+    response = send(review_2)
+    json_data = response.get_json()
+    assert "created_time" in json_data[0]
 
-        response = send_get(dict(offset=1))
-        assert response.get_json() == {"reviews": review[1:]}
+    del json_data[0]["created_time"]
+    assert response.get_json() == [review[1], 201]
 
-        response = send_get(dict(count=1, offset=1))
-        assert response.get_json() == {"reviews": review[1:2]}
+    response = send(review_3)
+    json_data = response.get_json()
+    assert "created_time" in json_data[0]
+
+    del json_data[0]["created_time"]
+    assert response.get_json() == [review[2], 201]
+
+    send_get = functools.partial(send_json, app, "get", "/reviews")
+
+    response = send_get(dict(product_id=1, count=1))
+    json_data = response.get_json()
+
+    for r in json_data["reviews"]:
+        del r["created_time"]
+    assert json_data == {"reviews": review[:1]}
+
+    response = send_get(dict(product_id=1, offset=1))
+    json_data = response.get_json()
+
+    for r in json_data["reviews"]:
+        del r["created_time"]
+    assert json_data == {"reviews": review[1:2]}
+
+    response = send_get(dict(product_id=2, count=1))
+    json_data = response.get_json()
+
+    for r in json_data["reviews"]:
+        del r["created_time"]
+    assert json_data == {"reviews": review[2:]}
