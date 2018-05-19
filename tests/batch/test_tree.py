@@ -15,5 +15,6 @@ def create_user(app, login, password, vk_id):
 
 def test_get(empty_database, app):
     sk1, pk1 = create_user(app, "login", "pass", "1")
+    response = app.get("/path", query_string=dict(user_hash=bytes_to_base64(pk1)))
     tree = snark.MerkleTree(config.TREE, config.TREE_INDEX)
-    assert tree.check(pk1)
+    assert tree.get_path(pk1) == base64_to_bytes(response.get_json()["path"])

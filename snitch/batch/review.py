@@ -53,6 +53,11 @@ class Reviews(Resource):
         if not success:
             abort(400, description)
 
+        # fixme!
+        # exist_root = models.Root.query.filter(models.Root.hash == tree_root).first()
+        # if not exist_root:
+        #     abort(400, "Root not found")
+
         # create new object
         review = models.Review(id=review_id, product_id=args["product_id"], review=json.loads(args["review"])["review"])
         db.session.add(review)

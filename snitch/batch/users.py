@@ -36,6 +36,11 @@ class Users(Resource):
         except binascii.Error:
             abort(400)
 
+        root = tree.get_root()
+        exist_root = models.Root.query.filter(models.Root.hash == root).first()
+        if not exist_root:
+            root = models.Root(hash=root)
+            db.session.add(root)
         db.session.add(user)
         db.session.commit()
 

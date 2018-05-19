@@ -8,7 +8,7 @@ def test_connect(empty_database):
 
 
 def test_create(empty_database):
-    root = Root(hash="very long hash")
+    root = Root(hash=b"very long hash")
     empty_database.session.add(root)
     empty_database.session.commit()
-    assert root.hash == "very long hash"
+    assert root.hash == b"very long hash"

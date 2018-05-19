@@ -7,9 +7,9 @@ from snitch import app
 from snitch.snark import snark
 
 
-@app.route("path", methods=["GET"])
+@app.route("/path", methods=["GET"])
 def get_tree_path():
-    user_hash = request.args.get('hash', type=str, default=None)
+    user_hash = request.args.get('user_hash', type=str, default=None)
     if not user_hash:
         abort(400)
 

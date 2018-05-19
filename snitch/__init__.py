@@ -8,3 +8,4 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from snitch.api import api
+from snitch.batch.tree import get_tree_path
