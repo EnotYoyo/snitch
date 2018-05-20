@@ -1,7 +1,7 @@
 import base64
 import binascii
 
-from flask import jsonify, current_app
+from flask import jsonify, current_app, make_response
 from sqlalchemy import or_
 from flask_restful import Resource, reqparse, abort
 from snitch import models, db
@@ -44,4 +44,4 @@ class Users(Resource):
         db.session.add(user)
         db.session.commit()
 
-        return jsonify(user.serialize, 201)
+        return make_response(jsonify(user.serialize), 201)

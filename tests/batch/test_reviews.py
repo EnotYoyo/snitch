@@ -49,7 +49,6 @@ def create_review(product_id, review, sk, tree_path):
         'snark': bytes_to_base64(zk_snark),
         'tree_root': bytes_to_base64(root)
     }
-    print(root)
     return review
 
 
@@ -101,8 +100,9 @@ def test_review_create(empty_database, app):
     with mock.patch("datetime.datetime") as patched:
         patched.utcnow = mock.Mock(return_value=d)
         response = send(review)
-        assert response.get_json() == [
-            {"id": review["review_id"], "review": "4 8 1 16 23 42", "created_time": int(d.timestamp())}, 201]
+        assert response.status_code == 201
+        assert response.get_json() == {
+            "id": review["review_id"], "review": "4 8 1 16 23 42", "created_time": int(d.timestamp())}
 
 
 # @patch("snitch.snark.snark.Verifier")

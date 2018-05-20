@@ -18,3 +18,6 @@ TREE = os.path.join(ROOT_PATH, "snark", "tree.bin")
 TREE_INDEX = os.path.join(ROOT_PATH, "snark", "tree_index.bin")
 VERIFICATION_KEY = os.path.join(ROOT_PATH, "snark", "vk.key")
 PROVING_KEY = os.path.join(ROOT_PATH, "snark", "pk.key")
+
+UPLOAD_FOLDER = os.path.join(ROOT_PATH, "uploads")
+DEFAULT_IMAGE = os.path.join(UPLOAD_FOLDER, "default.png")

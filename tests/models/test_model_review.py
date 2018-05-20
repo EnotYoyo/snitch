@@ -24,21 +24,23 @@ def test_connect(empty_database):
 
 
 def test_create(empty_database):
-    review = Review(id=b"1", product_id=1, review="Review test_create!")
+    review = Review(id=b"1", product_id=1, review="Review test_create!", rate=1)
     empty_database.session.add(review)
     empty_database.session.commit()
     assert review.id == b"1"
     assert review.product_id == 1
+    assert review.rate == 1
     assert review.review == "Review test_create!"
     assert isinstance(review.created_time, datetime.datetime)
 
 
 def test_russian_create(empty_database):
-    review = Review(id=b"1", product_id=1, review="Комментарий о продукте from Russia")
+    review = Review(id=b"1", product_id=1, review="Комментарий о продукте from Russia", rate=3)
     empty_database.session.add(review)
     empty_database.session.commit()
     assert review.id == b"1"
     assert review.product_id == 1
+    assert review.rate == 3
     assert review.review == "Комментарий о продукте from Russia"
     assert isinstance(review.created_time, datetime.datetime)
 
@@ -52,6 +54,27 @@ def test_nullable_product_id(empty_database):
 
 def test_nullable_review(empty_database):
     review = Review(product_id=1)
+    empty_database.session.add(review)
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        empty_database.session.commit()
+
+
+def test_zero_rate(empty_database):
+    review = Review(id=b"1", product_id=1, review="Review test_create!", rate=0)
+    empty_database.session.add(review)
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        empty_database.session.commit()
+
+
+def test_negative_rate(empty_database):
+    review = Review(id=b"1", product_id=1, review="Review test_create!", rate=-10)
+    empty_database.session.add(review)
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        empty_database.session.commit()
+
+
+def test_big_rate(empty_database):
+    review = Review(id=b"1", product_id=1, review="Review test_create!", rate=10)
     empty_database.session.add(review)
     with pytest.raises(sqlalchemy.exc.IntegrityError):
         empty_database.session.commit()

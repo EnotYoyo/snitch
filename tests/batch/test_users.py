@@ -26,7 +26,8 @@ def test_user_register(empty_database, app):
 
     sk, pk = create_users_keys()
     response = send(dict(login="login", vk_id="1", hash=bytes_to_base64(pk)))
-    assert response.get_json() == [{"id": 1, "login": "login"}, 201]
+    assert response.status_code == 201
+    assert response.get_json() == {"id": 1, "login": "login"}
 
     tree = snark.MerkleTree(config.TREE, config.TREE_INDEX)
     assert tree.check(pk)
@@ -37,7 +38,8 @@ def test_create_not_unique_login(empty_database, app):
 
     send = functools.partial(send_json, app, "post", "/users")
     response = send(dict(login="login", vk_id="1", hash=bytes_to_base64(pk1)))
-    assert response.get_json() == [{"id": 1, "login": "login"}, 201]
+    assert response.status_code == 201
+    assert response.get_json() == {"id": 1, "login": "login"}
 
     response = send(dict(login="login", vk_id="2", hash=bytes_to_base64(pk2)))
     assert response.status_code == 409
@@ -48,7 +50,8 @@ def test_create_not_unique_vk_id(empty_database, app):
 
     send = functools.partial(send_json, app, "post", "/users")
     response = send(dict(login="login1", vk_id="1", hash=bytes_to_base64(pk1)))
-    assert response.get_json() == [{"id": 1, "login": "login1"}, 201]
+    assert response.status_code == 201
+    assert response.get_json() == {"id": 1, "login": "login1"}
 
     response = send(dict(login="login2", vk_id="1", hash=bytes_to_base64(pk2)))
     assert response.status_code == 409
@@ -59,7 +62,8 @@ def test_create_not_unique_hash(empty_database, app):
 
     send = functools.partial(send_json, app, "post", "/users")
     response = send(dict(login="login1", vk_id="1", hash=bytes_to_base64(pk)))
-    assert response.get_json() == [{"id": 1, "login": "login1"}, 201]
+    assert response.status_code == 201
+    assert response.get_json() == {"id": 1, "login": "login1"}
 
     response = send(dict(login="login2", vk_id="2", hash=bytes_to_base64(pk)))
     assert response.status_code == 409
