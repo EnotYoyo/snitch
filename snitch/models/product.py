@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from sqlalchemy import func
 
 from snitch import db, app
@@ -23,8 +25,12 @@ class Product(db.Model):
             'image': self.image or app.config["DEFAULT_IMAGE_NAME"],
             'description': self.description,
             'rate': self.rate or 0,
+            'reviews': len(self.reviews)
         }
 
     @property
     def rate(self):
-        return db.session.query(func.avg(models.Review.rate)).filter(models.Review.product_id == self.id).first()[0]
+        r = db.session.query(func.avg(models.Review.rate)).filter(models.Review.product_id == self.id).first()[0]
+        if r is not None:
+            r = float(r)
+        return r

@@ -81,4 +81,4 @@ def test_serialise(empty_database):
     empty_database.session.add(product)
     empty_database.session.commit()
     assert product.serialize == {"id": 1, "name": "Test product", "image": config.DEFAULT_IMAGE_NAME,
-                                 "description": "description", "rate": 0}
+                                 "description": "description", "reviews": 0, "rate": 0}

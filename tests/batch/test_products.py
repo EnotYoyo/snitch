@@ -4,6 +4,7 @@ from io import BytesIO
 import pytest
 
 from snitch.config import config
+from snitch import models
 from tests.utils import empty_database, send_json, app
 
 
@@ -43,8 +44,8 @@ def test_product_create(empty_database, app):
 
     response = send(dict(name="Product 1", description="My test product", category="other"))
     assert response.status_code == 201
-    assert response.get_json() == {
-        "id": 1, "name": "Product 1", "description": "My test product", "rate": 0, "image": config.DEFAULT_IMAGE_NAME}
+    assert response.get_json() == {"id": 1, "name": "Product 1", "description": "My test product",
+                                   "rate": 0, "image": config.DEFAULT_IMAGE_NAME, "reviews": 0}
 
 
 def test_product_bad_category(empty_database, app):
@@ -58,8 +59,8 @@ def test_create_not_unique(empty_database, app):
     send = functools.partial(send_json, app, "post", "/products")
     response = send(dict(name="Product 1", description="My test product", category="other"))
     assert response.status_code == 201
-    assert response.get_json() == {
-        "id": 1, "name": "Product 1", "description": "My test product", "rate": 0, "image": config.DEFAULT_IMAGE_NAME}
+    assert response.get_json() == {"id": 1, "name": "Product 1", "description": "My test product",
+                                   "rate": 0, "reviews": 0, "image": config.DEFAULT_IMAGE_NAME}
 
     response = send(dict(name="Product 1", description="My test product [2]", category="books"))
     assert response.status_code == 409
@@ -68,13 +69,13 @@ def test_create_not_unique(empty_database, app):
 def test_product_list(empty_database, app):
     send = functools.partial(send_json, app, "post", "/products")
     products = [
-        {"id": 1, "name": "Product 0", "description": "My test product [0]", "rate": 0,
+        {"id": 1, "name": "Product 0", "description": "My test product [0]", "rate": 0, "reviews": 0,
          "image": config.DEFAULT_IMAGE_NAME},
-        {"id": 2, "name": "Product 1", "description": "My test product [1]", "rate": 0,
+        {"id": 2, "name": "Product 1", "description": "My test product [1]", "rate": 0, "reviews": 0,
          "image": config.DEFAULT_IMAGE_NAME},
-        {"id": 3, "name": "Product 2", "description": "My test product [2]", "rate": 0,
+        {"id": 3, "name": "Product 2", "description": "My test product [2]", "rate": 0, "reviews": 0,
          "image": config.DEFAULT_IMAGE_NAME},
-        {"id": 4, "name": "Product 3", "description": "My test product [3]", "rate": 0,
+        {"id": 4, "name": "Product 3", "description": "My test product [3]", "rate": 0, "reviews": 0,
          "image": config.DEFAULT_IMAGE_NAME}
     ]
     response = send(dict(name="Product 0", description="My test product [0]", category="other"))
@@ -118,3 +119,39 @@ def test_product_list(empty_database, app):
 
     response = send_get(dict(category="other"))
     assert response.get_json() == {"products": products[0:1]}
+
+
+def test_reviews_len(empty_database, app):
+    send = functools.partial(send_json, app, "post", "/products")
+    response = send(dict(name="Product 1", description="My test product", category="other"))
+    assert response.status_code == 201
+    assert response.get_json() == {"id": 1, "name": "Product 1", "description": "My test product",
+                                   "rate": 0, "image": config.DEFAULT_IMAGE_NAME, "reviews": 0}
+
+    review = models.Review(id=b"4", product_id=1, review="Review [1] test_create!", rate=1)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"8", product_id=1, review="Review [2] test_create!", rate=2)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"15", product_id=1, review="Review [3] test_create!", rate=3)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"16", product_id=1, review="Review [4] test_create!", rate=4)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"23", product_id=1, review="Review [5] test_create!", rate=5)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"42", product_id=1, review="Review [6] test_create!", rate=5)
+    empty_database.session.add(review)
+
+    empty_database.session.commit()
+
+    response = app.get("/products")
+    assert response.status_code == 200
+    response = response.get_json()["products"][0]
+    assert response["name"] == "Product 1"
+    assert response["description"] == "My test product"
+    assert response["rate"] == 20 / 6
+    assert response["reviews"] == 6

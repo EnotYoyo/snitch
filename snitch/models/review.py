@@ -15,7 +15,7 @@ class Review(db.Model):
     created_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     __table_args__ = (
-        db.CheckConstraint(and_(0 < rate, rate < 5), name='check_rate'),
+        db.CheckConstraint(and_(1 <= rate, rate <= 5), name='check_rate'),
         {})
 
     def __repr__(self):
