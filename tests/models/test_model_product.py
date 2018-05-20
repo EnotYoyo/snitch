@@ -13,13 +13,15 @@ def test_connect(empty_database):
 
 
 def test_create(empty_database):
-    product = Product(name="Test product", description="description", category="category")
+    product = Product(name="Test product", description="description", category="category",
+                      image="ee2a6403-6420-49e6-893a-4effdc34f860.jpeg")
     empty_database.session.add(product)
     empty_database.session.commit()
     assert product.id == 1
     assert product.name == "Test product"
     assert product.description == "description"
     assert product.category == "category"
+    assert product.image == "ee2a6403-6420-49e6-893a-4effdc34f860.jpeg"
 
 
 def test_russian_create(empty_database):
@@ -30,6 +32,7 @@ def test_russian_create(empty_database):
     assert product.name == "Тестовый product"
     assert product.description == "description описание"
     assert product.category == "категория"
+    assert product.image is None
 
 
 def test_unique_name(empty_database):
@@ -77,5 +80,5 @@ def test_serialise(empty_database):
     product = Product(name="Test product", description="description")
     empty_database.session.add(product)
     empty_database.session.commit()
-    assert product.serialize == {"id": 1, "name": "Test product", "image": config.DEFAULT_IMAGE,
+    assert product.serialize == {"id": 1, "name": "Test product", "image": config.DEFAULT_IMAGE_NAME,
                                  "description": "description", "rate": 0}

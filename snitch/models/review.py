@@ -26,5 +26,6 @@ class Review(db.Model):
         return {
             'id': base64.b64encode(self.id).decode('utf-8'),
             'review': self.review,
+            'rate': self.rate,
             'created_time': int(self.created_time.timestamp())
         }

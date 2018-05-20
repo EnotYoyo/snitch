@@ -45,5 +45,6 @@ def create_user(app, login, password, vk_id):
     prover = snark.Prover(config.PROVING_KEY)
     sk, pk = prover.get_key(login, password)
     response = send_json(app, "post", "/users", dict(login=login, vk_id=vk_id, hash=bytes_to_base64(pk)))
-    assert response.get_json() == [{"id": 1, "login": login}, 201]
+    assert response.status_code == 201
+    assert response.get_json() == {"id": 1, "login": login}
     return sk, pk

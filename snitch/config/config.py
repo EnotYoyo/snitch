@@ -20,4 +20,5 @@ VERIFICATION_KEY = os.path.join(ROOT_PATH, "snark", "vk.key")
 PROVING_KEY = os.path.join(ROOT_PATH, "snark", "pk.key")
 
 UPLOAD_FOLDER = os.path.join(ROOT_PATH, "uploads")
-DEFAULT_IMAGE = os.path.join(UPLOAD_FOLDER, "default.png")
+DEFAULT_IMAGE_NAME = "default.png"
+DEFAULT_IMAGE = os.path.join(UPLOAD_FOLDER, DEFAULT_IMAGE_NAME)

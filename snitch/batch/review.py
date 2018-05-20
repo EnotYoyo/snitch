@@ -2,7 +2,7 @@ import base64
 import binascii
 import datetime
 
-from flask import jsonify, current_app, abort, json
+from flask import jsonify, current_app, abort, json, make_response
 from flask_restful import Resource, reqparse
 from snitch import models, db
 from snitch.snark import snark
@@ -22,6 +22,7 @@ class Reviews(Resource):
         self.post_parse.add_argument("review_sig", type=str, location="json", required=True)
         self.post_parse.add_argument("snark", type=str, location="json", required=True)
         self.post_parse.add_argument("tree_root", type=str, location="json", required=True)
+        self.post_parse.add_argument("rate", type=int, location="json", required=True)
         super(Reviews, self).__init__()
 
     def get(self):
@@ -59,7 +60,8 @@ class Reviews(Resource):
         #     abort(400, "Root not found")
 
         # create new object
-        review = models.Review(id=review_id, product_id=args["product_id"], review=json.loads(args["review"])["review"])
+        review = models.Review(id=review_id, product_id=args["product_id"], rate=args["rate"],
+                               review=json.loads(args["review"])["review"])
         db.session.add(review)
         db.session.commit()
         return make_response(jsonify(review.serialize), 201)

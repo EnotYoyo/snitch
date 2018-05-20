@@ -99,11 +99,11 @@ def test_review_create(empty_database, app):
     d = datetime.datetime.utcnow()
     with mock.patch("datetime.datetime") as patched:
         patched.utcnow = mock.Mock(return_value=d)
+        review["rate"] = 4
         response = send(review)
         assert response.status_code == 201
         assert response.get_json() == {
-            "id": review["review_id"], "review": "4 8 1 16 23 42", "created_time": int(d.timestamp())}
-
+            "id": review["review_id"], "review": "4 8 1 16 23 42", "rate": 4, "created_time": int(d.timestamp())}
 
 # @patch("snitch.snark.snark.Verifier")
 # @patch("snitch.models.root.Root")
