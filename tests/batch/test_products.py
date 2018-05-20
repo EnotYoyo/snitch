@@ -1,5 +1,6 @@
 import functools
 from io import BytesIO
+from unicodedata import category
 
 import pytest
 
@@ -155,3 +156,45 @@ def test_reviews_len(empty_database, app):
     assert response["description"] == "My test product"
     assert response["rate"] == 20 / 6
     assert response["reviews"] == 6
+
+
+def test_product_top(empty_database, app):
+    product = models.Product(name="Test product1", description="description1", category="other")
+    empty_database.session.add(product)
+
+    product = models.Product(name="Test product2", description="description2", category="other")
+    empty_database.session.add(product)
+
+    product = models.Product(name="Test product3", description="description3", category="films")
+    empty_database.session.add(product)
+
+    review = models.Review(id=b"4", product_id=1, review="Review [1] test_create!", rate=1)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"8", product_id=1, review="Review [2] test_create!", rate=2)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"15", product_id=2, review="Review [3] test_create!", rate=3)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"16", product_id=2, review="Review [4] test_create!", rate=4)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"23", product_id=2, review="Review [5] test_create!", rate=5)
+    empty_database.session.add(review)
+
+    review = models.Review(id=b"42", product_id=3, review="Review [6] test_create!", rate=5)
+    empty_database.session.add(review)
+
+    empty_database.session.commit()
+
+    send_get = functools.partial(send_json, app, "get", "/products")
+    response = send_get(dict(category="other", top=True, count=1))
+    assert response.status_code == 200
+    response = response.get_json()["products"]
+    assert response[0]["id"] == 2
+
+    response = send_get(dict(category="other", top=True, count=1, offset=1))
+    assert response.status_code == 200
+    response = response.get_json()["products"]
+    assert response[0]["id"] == 1
