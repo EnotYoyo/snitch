@@ -63,5 +63,8 @@ class Reviews(Resource):
         review = models.Review(id=review_id, product_id=args["product_id"], rate=args["rate"],
                                review=json.loads(args["review"])["review"])
         db.session.add(review)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            abort(409)
         return make_response(jsonify(review.serialize), 201)
